@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Create Spotify playlists based on Allmusic.com new releases",
   "bin": {
-    "lazy-dj": "./lib/index.js"
+    "dj-lazy": "./lib/index.js"
   },
   "main": "lib/index.js",
   "scripts": {
