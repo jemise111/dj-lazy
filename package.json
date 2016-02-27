@@ -1,6 +1,6 @@
 {
   "name": "dj-lazy",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Create Spotify playlists based on Allmusic.com new releases",
   "bin": {
     "dj-lazy": "./lib/index.js"

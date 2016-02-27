@@ -1,9 +1,5 @@
 #!/usr/bin/env node
 
-// Check if credentials already exist in ENV
-let authToken = process.env.DJ_LAZY_SPOTIFY_AUTHORIZATION;
-// If not tell user you should set them there.
-
 import open from 'open';
 import Xray from 'x-ray';
 import SpotifyWebApi from 'spotify-web-api-node';
@@ -12,9 +8,9 @@ import Q from 'q';
 import cliOptions from 'commander';
 
 // Get command line args
-
 cliOptions
-.option('-m, --max <max>', 'The max number of albums to add')
+.option('-m, --max', 'The max number of albums to add')
+.option('-s, --status', 'The playlist status (public, private)')
 .parse(process.argv);
 
 const store = {
@@ -79,7 +75,11 @@ const fetchUser = _ => {
 const createPlaylist = _ => {
 	const date = new Date();
 	const title = `DJ Lazy ${date.toLocaleDateString()}`;
-	return spotifyApi.createPlaylist(store.userId, title, {public: false});
+	let status = 'public'; 
+	if (cliOptions.status === 'private' || cliOptions.status === 'public') {
+		status = cliOptions.status;
+	}
+	return spotifyApi.createPlaylist(store.userId, title, {public: status == 'public'});
 }
 
 const scrapeForAlbums = () => {
@@ -132,19 +132,23 @@ function startScraping(authToken) {
 	.then(fetchUser)
 	.then(userData => {
 		store.userId = userData.body.id;
+		console.log('Creating playlist...');
 		return createPlaylist();
 	})
 	.then(playlistData => {
 		store.playlistId = playlistData.body.id;
+		console.log('Fetching albums from Allmusic...');
 		return scrapeForAlbums();
 	})
 	.then(scrapedAlbums => {
 		store.scrapedAlbums = scrapedAlbums;
+		console.log('Searching Spotify...');
 		return Q.all(scrapedAlbums.map(album => {
 			return spotifyApi.searchAlbums(`album:${album.title} artist:${album.artist}`);
 		}));
 	})
 	.then(spotifyAlbumResultsData => {
+		console.log('Fetching tracks...');
 		const maxAlbums = cliOptions.max && parseInt(cliOptions.max);
 		const topMatchIds = spotifyAlbumResultsData.map((result, i) => {
 			if (result.body.albums && result.body.albums.items && result.body.albums.items.length) {
@@ -157,6 +161,7 @@ function startScraping(authToken) {
 		return getAlbumsTracks(topMatchIds);
 	})
 	.then(albumsTracksData => {
+		console.log('Adding tracks to Spotify...');
 		const albumsTracksUris = albumsTracksData.map(result => {
 			return result.body.items.map(item => item.uri);
 		});
@@ -164,6 +169,7 @@ function startScraping(authToken) {
 		return addTracksToPlaylist(flatAlbumsTracksUris);
 	})
 	.then(data => {
+		console.log('Finished!');
 		console.log('Found Spotify Albums For');
 		console.log('=========================');
 		store.albumsSuccess.map(a => console.log(`${a.title} by ${a.artist}`));
