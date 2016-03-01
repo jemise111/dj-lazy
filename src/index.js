@@ -41,24 +41,18 @@ const spotifyApi = new SpotifyWebApi({clientId, clientSecret, redirectUri});
 // Create the authorization URL
 const authorizeURL = spotifyApi.createAuthorizeURL(config.scopes, 'mystate');
 
-if (authToken) {
+const app = express();
+let server;
+
+app.get(config.redirectPath, (req, res) => {
+	const authToken = req.query.code;
+	res.send('<script>window.close();</script>');
+	server.close();
 	startScraping(authToken);
-} else {
-	const app = express();
-	let server;
+});
 
-	app.get(config.redirectPath, (req, res) => {
-		// console.log('Here is your authorization token, you can avoid this step when running this script in the future by saving this token in an environment variable named LAZY_DJ_SPOTIFY_AUTHORIZATION');
-		authToken = req.query.code;
-		// console.log(authToken);
-		res.send('<script>window.close();</script>');
-		server.close();
-		startScraping(authToken);
-	});
-
-	server = app.listen(config.port, _ => console.log(`Server listening on port ${config.port}!\n`) );
-	open(authorizeURL);
-};
+server = app.listen(config.port, _ => console.log(`Server listening on port ${config.port}!\n`) );
+open(authorizeURL);
 
 const authorize = (authToken) => {
 	return spotifyApi.authorizationCodeGrant(authToken);

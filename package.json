@@ -1,6 +1,6 @@
 {
   "name": "dj-lazy",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Create Spotify playlists based on Allmusic.com new releases",
   "bin": {
     "dj-lazy": "./lib/index.js"
@@ -35,7 +35,6 @@
     "commander": "^2.9.0",
     "express": "^4.13.4",
     "open": "0.0.5",
-    "phantomjs-prebuilt": "^2.1.4",
     "q": "^1.4.1",
     "spotify-web-api-node": "^2.2.0",
     "x-ray": "^2.0.3"
